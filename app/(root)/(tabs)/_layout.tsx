@@ -11,18 +11,14 @@ const TabIcon = ({
   focused: boolean;
 }) => (
   <View
-    className={`flex flex-row justify-center items-center rounded-full ${focused ? "bg-general-300" : ""}`}
+    className={`items-center justify-center w-12 h-12 rounded-2xl ${focused ? "bg-general-400" : "bg-transparent"}`}
   >
-    <View
-      className={`rounded-full w-12 h-12 items-center justify-center ${focused ? "bg-general-400" : ""}`}
-    >
-      <Image
-        source={source}
-        tintColor="white"
-        resizeMode="contain"
-        className="w-7 h-7"
-      />
-    </View>
+    <Image
+      source={source}
+      tintColor="white"
+      resizeMode="contain"
+      className="w-6 h-6"
+    />
   </View>
 );
 
@@ -35,19 +31,37 @@ export default function Layout() {
         tabBarInactiveTintColor: "white",
         tabBarShowLabel: false,
         tabBarStyle: {
-          backgroundColor: "#333333",
-          borderRadius: 50,
-          paddingBottom: 0, // ios only
-          overflow: "hidden",
-          marginHorizontal: 20,
-          marginBottom: 20,
-          height: 78,
+          backgroundColor: "#111827",
+          borderRadius: 28,
+          paddingBottom: 8, // ios only
+          paddingTop: 8,
+          paddingHorizontal: 16,
+          marginHorizontal: 16,
+          marginBottom: 16,
+          height: 64,
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
           flexDirection: "row",
           position: "absolute",
+          borderWidth: 1,
+          borderColor: "#1F2937",
+          shadowColor: "#000",
+          shadowOpacity: 0.16,
+          shadowOffset: { width: 0, height: 8 },
+          shadowRadius: 18,
+          elevation: 10,
         },
+        tabBarItemStyle: {
+          flex: 1,
+          height: 48,
+          alignItems: "center",
+          justifyContent: "center",
+        },
+        tabBarIconStyle: {
+          marginTop: 0,
+        },
+        tabBarHideOnKeyboard: true,
       }}
     >
       <Tabs.Screen

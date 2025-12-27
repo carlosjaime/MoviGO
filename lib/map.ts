@@ -39,8 +39,8 @@ export const calculateRegion = ({
     return {
       latitude: 37.78825,
       longitude: -122.4324,
-      latitudeDelta: 0.01,
-      longitudeDelta: 0.01,
+      latitudeDelta: 0.004,
+      longitudeDelta: 0.004,
     };
   }
 
@@ -48,8 +48,8 @@ export const calculateRegion = ({
     return {
       latitude: userLatitude,
       longitude: userLongitude,
-      latitudeDelta: 0.01,
-      longitudeDelta: 0.01,
+      latitudeDelta: 0.004,
+      longitudeDelta: 0.004,
     };
   }
 

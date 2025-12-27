@@ -15,14 +15,20 @@ const OAuth = () => {
     if (result.code === "session_exists") {
       Alert.alert("Éxito", "La sesión existe. Redirigiendo al inicio.");
       router.replace("/(root)/(tabs)/home");
+      return;
     }
 
-    Alert.alert(result.success ? "Éxito" : "Error", result.message);
+    if (result.success) {
+      router.replace("/(root)/(tabs)/home");
+      return;
+    }
+
+    Alert.alert("Error", result.message);
   };
 
   return (
     <View>
-      <View className="flex flex-row justify-center items-center mt-4 gap-x-3">
+      <View className="flex flex-row justify-center items-center mt-3 gap-x-3">
         <View className="flex-1 h-[1px] bg-general-100" />
         <Text className="text-lg">O</Text>
         <View className="flex-1 h-[1px] bg-general-100" />
@@ -30,7 +36,7 @@ const OAuth = () => {
 
       <CustomButton
         title="Iniciar sesión con Google"
-        className="mt-5 w-full"
+        className="mt-3 w-full py-4"
         IconLeft={() => (
           <Image
             source={icons.google}

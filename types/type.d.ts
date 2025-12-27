@@ -31,9 +31,12 @@ declare interface MapProps {
   onDriverTimesCalculated?: (driversWithTimes: MarkerData[]) => void;
   selectedDriver?: number | null;
   onMapReady?: () => void;
+  mode?: "client" | "driver";
+  onMapPress?: (location: { latitude: number; longitude: number }) => void;
 }
 
 declare interface Ride {
+  ride_id: number;
   origin_address: string;
   destination_address: string;
   origin_latitude: number;
@@ -43,6 +46,8 @@ declare interface Ride {
   ride_time: number;
   fare_price: number;
   payment_status: string;
+  status?: RidePhase;
+  verification_code?: string;
   driver_id: number;
   user_id: string;
   created_at: string;
@@ -130,6 +135,36 @@ declare interface DriverStore {
   setSelectedDriver: (driverId: number) => void;
   setDrivers: (drivers: MarkerData[]) => void;
   clearSelectedDriver: () => void;
+}
+
+declare type RidePhase =
+  | "idle"
+  | "driver_en_route"
+  | "arrived"
+  | "in_progress"
+  | "completed";
+
+declare interface ActiveRide {
+  rideId: number;
+  verificationCode: string;
+  status: RidePhase;
+  driverId: number | null;
+  originAddress?: string | null;
+  destinationAddress?: string | null;
+}
+
+declare interface RideStore {
+  activeRide: ActiveRide | null;
+  setActiveRide: (ride: ActiveRide) => void;
+  setRideStatus: (status: RidePhase) => void;
+  clearActiveRide: () => void;
+}
+
+declare type UserRole = "client" | "driver";
+
+declare interface RoleStore {
+  role: UserRole;
+  setRole: (role: UserRole) => void;
 }
 
 declare interface DriverCardProps {

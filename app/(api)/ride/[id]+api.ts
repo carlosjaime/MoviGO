@@ -36,6 +36,8 @@ export async function GET(request: Request, { id }: { id: string }) {
             rides.ride_time,
             rides.fare_price,
             rides.payment_status,
+            rides.status,
+            rides.verification_code,
             rides.created_at,
             'driver', json_build_object(
                 'driver_id', drivers.id,

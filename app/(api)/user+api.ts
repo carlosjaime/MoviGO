@@ -18,7 +18,7 @@ export async function POST(request: Request) {
         : `${url}?sslmode=require`;
     }
     const sql = neon(url);
-    const { name, email, clerkId } = await request.json();
+    const { name, email, clerkId, role } = await request.json();
 
     if (!name || !email || !clerkId) {
       return new Response(
@@ -34,12 +34,14 @@ export async function POST(request: Request) {
       INSERT INTO users (
         name, 
         email, 
-        clerk_id
+        clerk_id,
+        role
       ) 
       VALUES (
         ${name}, 
         ${email},
-        ${clerkId}
+        ${clerkId},
+        ${role || "client"}
      );`;
 
     return new Response(JSON.stringify({ data: response }), {

@@ -2,13 +2,20 @@ import { useAuth } from "@clerk/clerk-expo";
 import { useStripe } from "@stripe/stripe-react-native";
 import { router } from "expo-router";
 import React, { useState } from "react";
-import { Alert, Image, Text, View } from "react-native";
-import { ReactNativeModal } from "react-native-modal";
+import {
+  Alert,
+  Image,
+  Modal,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 
 import CustomButton from "@/components/CustomButton";
 import { images } from "@/constants";
 import { fetchAPI } from "@/lib/fetch";
-import { useLocationStore } from "@/store";
+import { useLocationStore, useRideStore } from "@/store";
 import { PaymentProps } from "@/types/type";
 
 const Payment = ({
@@ -27,6 +34,7 @@ const Payment = ({
     destinationAddress,
     destinationLongitude,
   } = useLocationStore();
+  const { setActiveRide } = useRideStore();
 
   const { userId } = useAuth();
   const [success, setSuccess] = useState<boolean>(false);
@@ -87,7 +95,7 @@ const Payment = ({
             });
 
             if (result.client_secret) {
-              await fetchAPI("/(api)/ride/create", {
+              const rideResponse = await fetchAPI("/(api)/ride/create", {
                 method: "POST",
                 headers: {
                   "Content-Type": "application/json",
@@ -106,6 +114,17 @@ const Payment = ({
                   user_id: userId,
                 }),
               });
+
+              if (rideResponse?.data?.ride_id) {
+                setActiveRide({
+                  rideId: rideResponse.data.ride_id,
+                  verificationCode: rideResponse.data.verification_code,
+                  status: rideResponse.data.status || "driver_en_route",
+                  driverId,
+                  originAddress: userAddress,
+                  destinationAddress,
+                });
+              }
 
               intentCreationCallback({
                 clientSecret: result.client_secret,
@@ -130,34 +149,52 @@ const Payment = ({
         onPress={openPaymentSheet}
       />
 
-      <ReactNativeModal
-        isVisible={success}
-        onBackdropPress={() => setSuccess(false)}
+      <Modal
+        transparent
+        animationType="fade"
+        visible={success}
+        onRequestClose={() => setSuccess(false)}
       >
-        <View className="flex flex-col items-center justify-center bg-white p-7 rounded-2xl">
-          <Image source={images.check} className="w-28 h-28 mt-5" />
-
-          <Text className="text-2xl text-center font-JakartaBold mt-5">
-            Reserva realizada con éxito
-          </Text>
-
-          <Text className="text-md text-general-200 font-JakartaRegular text-center mt-3">
-            Gracias por tu reservación. Tu viaje ha sido confirmado. ¡Buen
-            viaje!
-          </Text>
-
-          <CustomButton
-            title="Volver al inicio"
-            onPress={() => {
-              setSuccess(false);
-              router.push("/(root)/(tabs)/home");
-            }}
-            className="mt-5"
+        <View style={styles.modalBackdrop}>
+          <Pressable
+            style={StyleSheet.absoluteFillObject}
+            onPress={() => setSuccess(false)}
           />
+          <View className="flex flex-col items-center justify-center bg-white p-7 rounded-2xl w-full">
+            <Image source={images.check} className="w-28 h-28 mt-5" />
+
+            <Text className="text-2xl text-center font-JakartaBold mt-5">
+              Reserva realizada con éxito
+            </Text>
+
+            <Text className="text-md text-general-200 font-JakartaRegular text-center mt-3">
+              Gracias por tu reservación. Tu viaje ha sido confirmado. ¡Buen
+              viaje!
+            </Text>
+
+            <CustomButton
+              title="Volver al inicio"
+              onPress={() => {
+                setSuccess(false);
+                router.push("/(root)/(tabs)/home");
+              }}
+              className="mt-5"
+            />
+          </View>
         </View>
-      </ReactNativeModal>
+      </Modal>
     </>
   );
 };
+
+const styles = StyleSheet.create({
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.4)",
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 20,
+  },
+});
 
 export default Payment;

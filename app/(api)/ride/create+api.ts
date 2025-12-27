@@ -55,6 +55,10 @@ export async function POST(request: Request) {
         : `${url}?sslmode=require`;
     }
     const sql = neon(url);
+    const verification_code = String(
+      Math.floor(1000 + Math.random() * 9000),
+    );
+    const status = "driver_en_route";
 
     const response = await sql`
       INSERT INTO rides ( 
@@ -68,7 +72,9 @@ export async function POST(request: Request) {
           fare_price, 
           payment_status, 
           driver_id, 
-          user_id
+          user_id,
+          verification_code,
+          status
       ) VALUES (
           ${origin_address},
           ${destination_address},
@@ -80,7 +86,9 @@ export async function POST(request: Request) {
           ${fare_price},
           ${payment_status},
           ${driver_id},
-          ${user_id}
+          ${user_id},
+          ${verification_code},
+          ${status}
       )
       RETURNING *;
     `;

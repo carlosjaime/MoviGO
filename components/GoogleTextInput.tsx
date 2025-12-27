@@ -28,7 +28,7 @@ const GoogleTextInput = ({
   });
   return (
     <View
-      className={`flex flex-row items-center justify-center relative z-50 rounded-xl ${containerStyle}`}
+      className={`flex flex-row items-center justify-center relative z-50 w-full ${containerStyle}`}
     >
       <GooglePlacesAutocomplete
         fetchDetails={true}
@@ -38,29 +38,36 @@ const GoogleTextInput = ({
           textInputContainer: {
             alignItems: "center",
             justifyContent: "center",
-            borderRadius: 20,
-            marginHorizontal: 20,
+            borderRadius: 16,
+            paddingHorizontal: 12,
+            paddingVertical: 4,
             position: "relative",
-            ...(shadow as object),
-          },
-          textInput: {
             backgroundColor: textInputBackgroundColor
               ? textInputBackgroundColor
               : "white",
+            borderWidth: 1,
+            borderColor: "#E6E6E6",
+            ...(shadow as object),
+          },
+          textInput: {
+            backgroundColor: "transparent",
             fontSize: 16,
             fontWeight: "600",
-            marginTop: 5,
+            marginTop: 2,
             width: "100%",
-            borderRadius: 200,
+            borderRadius: 16,
+            paddingVertical: 10,
           },
           listView: {
             backgroundColor: textInputBackgroundColor
               ? textInputBackgroundColor
               : "white",
             position: "relative",
-            top: 0,
+            top: 6,
             width: "100%",
-            borderRadius: 10,
+            borderRadius: 16,
+            borderWidth: 1,
+            borderColor: "#E6E6E6",
             ...(shadow as object),
             zIndex: 99,
           },
@@ -77,10 +84,10 @@ const GoogleTextInput = ({
           language: "es",
         }}
         renderLeftButton={() => (
-          <View className="justify-center items-center w-6 h-6">
+          <View className="justify-center items-center w-9 h-9 rounded-full bg-neutral-100">
             <Image
               source={icon ? icon : icons.search}
-              className="w-6 h-6"
+              className="w-5 h-5"
               resizeMode="contain"
             />
           </View>

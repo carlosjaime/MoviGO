@@ -9,6 +9,10 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { enableScreens, enableFreeze } from "react-native-screens";
 
 import { tokenCache } from "@/lib/auth";
+import {
+  configureNotifications,
+  registerForPushNotificationsAsync,
+} from "@/lib/notifications";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -44,6 +48,11 @@ const RootLayout = memo(function RootLayout() {
     Jakarta: require("../assets/fonts/PlusJakartaSans-Regular.ttf"),
     "Jakarta-SemiBold": require("../assets/fonts/PlusJakartaSans-SemiBold.ttf"),
   });
+
+  useEffect(() => {
+    configureNotifications();
+    registerForPushNotificationsAsync();
+  }, []);
 
   if (!loaded) {
     return null;

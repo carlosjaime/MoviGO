@@ -1,6 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { ActivityIndicator, Platform, Text, View } from "react-native";
-import MapView, { Marker, PROVIDER_DEFAULT } from "react-native-maps";
+import MapView, {
+  MapPressEvent,
+  Marker,
+  PROVIDER_DEFAULT,
+} from "react-native-maps";
 import MapViewDirections from "react-native-maps-directions";
 
 import { icons } from "@/constants";
@@ -11,11 +15,58 @@ import {
   generateMarkersFromData,
 } from "@/lib/map";
 import { useDriverStore, useLocationStore } from "@/store";
-import { Driver, MarkerData } from "@/types/type";
+import { Driver, MarkerData, MapProps } from "@/types/type";
 
 const directionsAPI = process.env.EXPO_PUBLIC_DIRECTIONS_API_KEY;
 
-const Map = () => {
+const uberMapStyle = [
+  {
+    elementType: "geometry",
+    stylers: [{ color: "#f2f2f2" }],
+  },
+  {
+    elementType: "labels.icon",
+    stylers: [{ visibility: "off" }],
+  },
+  {
+    elementType: "labels.text.fill",
+    stylers: [{ color: "#6b7280" }],
+  },
+  {
+    elementType: "labels.text.stroke",
+    stylers: [{ color: "#f2f2f2" }],
+  },
+  {
+    featureType: "poi",
+    stylers: [{ visibility: "off" }],
+  },
+  {
+    featureType: "road",
+    elementType: "geometry",
+    stylers: [{ color: "#ffffff" }],
+  },
+  {
+    featureType: "road",
+    elementType: "geometry.stroke",
+    stylers: [{ color: "#e5e7eb" }],
+  },
+  {
+    featureType: "road",
+    elementType: "labels.text.fill",
+    stylers: [{ color: "#6b7280" }],
+  },
+  {
+    featureType: "transit",
+    stylers: [{ visibility: "off" }],
+  },
+  {
+    featureType: "water",
+    elementType: "geometry",
+    stylers: [{ color: "#dbeafe" }],
+  },
+];
+
+const Map = ({ mode = "client", onMapPress }: MapProps) => {
   const {
     userLongitude,
     userLatitude,
@@ -23,9 +74,17 @@ const Map = () => {
     destinationLongitude,
   } = useLocationStore();
   const { selectedDriver, setDrivers } = useDriverStore();
+  const mapRef = useRef<MapView>(null);
 
   const { data: drivers, loading, error } = useFetch<Driver[]>("/(api)/driver");
   const [markers, setMarkers] = useState<MarkerData[]>([]);
+  const driverMarker = useMemo(() => {
+    if (mode !== "driver") return null;
+    if (!markers.length) return null;
+    return (
+      markers.find((marker) => marker.id === selectedDriver) ?? markers[0]
+    );
+  }, [markers, mode, selectedDriver]);
 
   useEffect(() => {
     if (Array.isArray(drivers)) {
@@ -66,12 +125,27 @@ const Map = () => {
     userLongitude,
   ]);
 
-  const region = calculateRegion({
-    userLatitude,
-    userLongitude,
-    destinationLatitude,
-    destinationLongitude,
-  });
+  const region = useMemo(
+    () =>
+      calculateRegion({
+        userLatitude,
+        userLongitude,
+        destinationLatitude,
+        destinationLongitude,
+      }),
+    [userLatitude, userLongitude, destinationLatitude, destinationLongitude],
+  );
+
+  useEffect(() => {
+    if (!mapRef.current || !userLatitude || !userLongitude) return;
+    mapRef.current.animateToRegion(region, 400);
+  }, [region, userLatitude, userLongitude]);
+
+  const handleMapPress = (event: MapPressEvent) => {
+    if (!onMapPress) return;
+    const { latitude, longitude } = event.nativeEvent.coordinate;
+    onMapPress({ latitude, longitude });
+  };
 
   if (loading || (!userLatitude && !userLongitude))
     return (
@@ -89,28 +163,91 @@ const Map = () => {
 
   return (
     <MapView
+      ref={mapRef}
       provider={PROVIDER_DEFAULT}
       className="w-full h-full rounded-2xl"
       tintColor="black"
-      mapType={Platform.OS === "ios" ? "mutedStandard" : "standard"}
+      mapType="standard"
       showsPointsOfInterest={false}
+      showsBuildings={false}
+      showsCompass={false}
       initialRegion={region}
-      showsUserLocation={true}
+      onPress={onMapPress ? handleMapPress : undefined}
+      showsUserLocation={false}
       userInterfaceStyle="light"
+      customMapStyle={uberMapStyle}
     >
-      {markers.map((marker, index) => (
+      {userLatitude && userLongitude && (
         <Marker
-          key={marker.id}
+          key="user-location"
+          coordinate={{ latitude: userLatitude, longitude: userLongitude }}
+          anchor={{ x: 0.5, y: 0.5 }}
+        >
+          <View
+            style={{
+              width: 14,
+              height: 14,
+              backgroundColor: "#ffffff",
+              borderColor: "#111827",
+              borderWidth: 2,
+              borderRadius: 4,
+              alignItems: "center",
+              justifyContent: "center",
+              shadowColor: "#000",
+              shadowOpacity: 0.15,
+              shadowRadius: 4,
+              shadowOffset: { width: 0, height: 1 },
+            }}
+          >
+            <View
+              style={{
+                width: 4,
+                height: 4,
+                backgroundColor: "#111827",
+                borderRadius: 2,
+              }}
+            />
+          </View>
+        </Marker>
+      )}
+      {mode === "client" &&
+        markers.map((marker) => (
+          <Marker
+            key={marker.id}
+            coordinate={{
+              latitude: marker.latitude,
+              longitude: marker.longitude,
+            }}
+            title={marker.title}
+            image={
+              selectedDriver === +marker.id ? icons.selectedMarker : icons.marker
+            }
+          />
+        ))}
+
+      {mode === "driver" && driverMarker && (
+        <Marker
+          key="driver"
           coordinate={{
-            latitude: marker.latitude,
-            longitude: marker.longitude,
+            latitude: driverMarker.latitude,
+            longitude: driverMarker.longitude,
           }}
-          title={marker.title}
-          image={
-            selectedDriver === +marker.id ? icons.selectedMarker : icons.marker
-          }
+          title="Conductor"
+          image={icons.selectedMarker}
         />
-      ))}
+      )}
+
+      {mode === "driver" && userLatitude && userLongitude && (
+        <Marker
+          key="pickup"
+          coordinate={{
+            latitude: userLatitude,
+            longitude: userLongitude,
+          }}
+          title="Recogida"
+          image={icons.pin}
+        />
+      )}
 
       {destinationLatitude && destinationLongitude && (
         <>
@@ -123,21 +260,107 @@ const Map = () => {
             title="Destino"
             image={icons.pin}
           />
-          <MapViewDirections
-            origin={{
-              latitude: userLatitude!,
-              longitude: userLongitude!,
-            }}
-            destination={{
-              latitude: destinationLatitude,
-              longitude: destinationLongitude,
-            }}
-            apikey={directionsAPI!}
-            strokeColor="#0286FF"
-            strokeWidth={2}
-          />
+          {mode === "client" && (
+            <>
+              <MapViewDirections
+                origin={{
+                  latitude: userLatitude!,
+                  longitude: userLongitude!,
+                }}
+                destination={{
+                  latitude: destinationLatitude,
+                  longitude: destinationLongitude,
+                }}
+                apikey={directionsAPI!}
+                strokeColor="#d1d5db"
+                strokeWidth={6}
+              />
+              <MapViewDirections
+                origin={{
+                  latitude: userLatitude!,
+                  longitude: userLongitude!,
+                }}
+                destination={{
+                  latitude: destinationLatitude,
+                  longitude: destinationLongitude,
+                }}
+                apikey={directionsAPI!}
+                strokeColor="#111827"
+                strokeWidth={3}
+              />
+            </>
+          )}
         </>
       )}
+
+      {mode === "driver" &&
+        driverMarker &&
+        userLatitude &&
+        userLongitude && (
+          <>
+            <MapViewDirections
+              origin={{
+                latitude: driverMarker.latitude,
+                longitude: driverMarker.longitude,
+              }}
+              destination={{
+                latitude: userLatitude,
+                longitude: userLongitude,
+              }}
+              apikey={directionsAPI!}
+              strokeColor="#d1d5db"
+              strokeWidth={6}
+            />
+            <MapViewDirections
+              origin={{
+                latitude: driverMarker.latitude,
+                longitude: driverMarker.longitude,
+              }}
+              destination={{
+                latitude: userLatitude,
+                longitude: userLongitude,
+              }}
+              apikey={directionsAPI!}
+              strokeColor="#111827"
+              strokeWidth={3}
+            />
+          </>
+        )}
+
+      {mode === "driver" &&
+        userLatitude &&
+        userLongitude &&
+        destinationLatitude &&
+        destinationLongitude && (
+          <>
+            <MapViewDirections
+              origin={{
+                latitude: userLatitude,
+                longitude: userLongitude,
+              }}
+              destination={{
+                latitude: destinationLatitude,
+                longitude: destinationLongitude,
+              }}
+              apikey={directionsAPI!}
+              strokeColor="#d1d5db"
+              strokeWidth={6}
+            />
+            <MapViewDirections
+              origin={{
+                latitude: userLatitude,
+                longitude: userLongitude,
+              }}
+              destination={{
+                latitude: destinationLatitude,
+                longitude: destinationLongitude,
+              }}
+              apikey={directionsAPI!}
+              strokeColor="#111827"
+              strokeWidth={3}
+            />
+          </>
+        )}
     </MapView>
   );
 };
