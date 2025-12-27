@@ -1,4 +1,4 @@
-import { TouchableOpacity, Text } from "react-native";
+import { TouchableOpacity, Text, Platform } from "react-native";
 
 import { ButtonProps } from "@/types/type";
 
@@ -42,10 +42,19 @@ const CustomButton = ({
   className,
   ...props
 }: ButtonProps) => {
+  const shadowCls = Platform.select({
+    web: "",
+    default: "shadow-md shadow-neutral-400/70",
+  });
+  const shadowStyle = Platform.select({
+    web: { boxShadow: "0px 2px 8px rgba(0,0,0,0.08)" },
+    default: undefined,
+  });
   return (
     <TouchableOpacity
       onPress={onPress}
-      className={`w-full rounded-full p-3 flex flex-row justify-center items-center shadow-md shadow-neutral-400/70 ${getBgVariantStyle(bgVariant)} ${className}`}
+      className={`w-full rounded-full p-3 flex flex-row justify-center items-center ${shadowCls} ${getBgVariantStyle(bgVariant)} ${className}`}
+      style={shadowStyle as any}
       {...props}
     >
       {IconLeft && <IconLeft />}

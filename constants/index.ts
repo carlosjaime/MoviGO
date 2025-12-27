@@ -74,23 +74,23 @@ export const icons = {
 export const onboarding = [
   {
     id: 1,
-    title: "The perfect ride is just a tap away!",
+    title: "¡El viaje perfecto está a un toque de distancia!",
     description:
-      "Your journey begins with Ryde. Find your ideal ride effortlessly.",
+      "Tu aventura comienza con MoviGO. Encuentra tu viaje ideal fácilmente.",
     image: images.onboarding1,
   },
   {
     id: 2,
-    title: "Best car in your hands with Ryde",
+    title: "El mejor auto en tus manos con MoviGO",
     description:
-      "Discover the convenience of finding your perfect ride with Ryde",
+      "Descubre la comodidad de encontrar tu viaje perfecto con MoviGO",
     image: images.onboarding2,
   },
   {
     id: 3,
-    title: "Your ride, your way. Let's go!",
+    title: "Tu viaje, a tu manera. ¡Vamos!",
     description:
-      "Enter your destination, sit back, and let us take care of the rest.",
+      "Ingresa tu destino, relájate y nosotros nos encargamos del resto.",
     image: images.onboarding3,
   },
 ];

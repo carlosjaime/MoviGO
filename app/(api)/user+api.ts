@@ -2,13 +2,31 @@ import { neon } from "@neondatabase/serverless";
 
 export async function POST(request: Request) {
   try {
-    const sql = neon(`${process.env.DATABASE_URL}`);
+    let url = process.env.DATABASE_URL || "";
+    if (!/^postgres(ql)?:\/\//.test(url)) {
+      return new Response(
+        JSON.stringify({ error: "DATABASE_URL inválida o no configurada" }),
+        {
+          status: 500,
+          headers: { "content-type": "application/json" },
+        },
+      );
+    }
+    if (!url.includes("sslmode=")) {
+      url = url.includes("?")
+        ? `${url}&sslmode=require`
+        : `${url}?sslmode=require`;
+    }
+    const sql = neon(url);
     const { name, email, clerkId } = await request.json();
 
     if (!name || !email || !clerkId) {
-      return Response.json(
-        { error: "Missing required fields" },
-        { status: 400 },
+      return new Response(
+        JSON.stringify({ error: "Missing required fields" }),
+        {
+          status: 400,
+          headers: { "content-type": "application/json" },
+        },
       );
     }
 
@@ -29,6 +47,9 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     console.error("Error creating user:", error);
-    return Response.json({ error: "Internal Server Error" }, { status: 500 });
+    return new Response(JSON.stringify({ error: "Internal Server Error" }), {
+      status: 500,
+      headers: { "content-type": "application/json" },
+    });
   }
 }

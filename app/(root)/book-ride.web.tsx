@@ -17,10 +17,10 @@ const BookRide = () => {
   )[0];
 
   return (
-    <RideLayout title="Reservar viaje">
+    <RideLayout title="Book Ride">
       <>
         <Text className="text-xl font-JakartaSemiBold mb-3">
-          Información del viaje
+          Ride Information
         </Text>
 
         <View className="flex flex-col w-full items-center justify-center mt-10">
@@ -49,25 +49,21 @@ const BookRide = () => {
 
         <View className="flex flex-col w-full items-start justify-center py-3 px-5 rounded-3xl bg-general-600 mt-5">
           <View className="flex flex-row items-center justify-between w-full border-b border-white py-3">
-            <Text className="text-lg font-JakartaRegular">
-              Precio del viaje
-            </Text>
+            <Text className="text-lg font-JakartaRegular">Ride Price</Text>
             <Text className="text-lg font-JakartaRegular text-[#0CC25F]">
               ${driverDetails?.price}
             </Text>
           </View>
 
           <View className="flex flex-row items-center justify-between w-full border-b border-white py-3">
-            <Text className="text-lg font-JakartaRegular">
-              Hora de recogida
-            </Text>
+            <Text className="text-lg font-JakartaRegular">Pickup Time</Text>
             <Text className="text-lg font-JakartaRegular">
               {formatTime(driverDetails?.time!)}
             </Text>
           </View>
 
           <View className="flex flex-row items-center justify-between w-full py-3">
-            <Text className="text-lg font-JakartaRegular">Asientos</Text>
+            <Text className="text-lg font-JakartaRegular">Car Seats</Text>
             <Text className="text-lg font-JakartaRegular">
               {driverDetails?.car_seats}
             </Text>

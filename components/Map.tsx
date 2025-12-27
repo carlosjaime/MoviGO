@@ -57,7 +57,14 @@ const Map = () => {
         setDrivers(drivers as MarkerData[]);
       });
     }
-  }, [markers, destinationLatitude, destinationLongitude]);
+  }, [
+    markers,
+    destinationLatitude,
+    destinationLongitude,
+    setDrivers,
+    userLatitude,
+    userLongitude,
+  ]);
 
   const region = calculateRegion({
     userLatitude,
@@ -113,7 +120,7 @@ const Map = () => {
               latitude: destinationLatitude,
               longitude: destinationLongitude,
             }}
-            title="Destination"
+            title="Destino"
             image={icons.pin}
           />
           <MapViewDirections

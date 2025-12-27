@@ -37,7 +37,7 @@ const Payment = ({
     const { error } = await presentPaymentSheet();
 
     if (error) {
-      Alert.alert(`Error code: ${error.code}`, error.message);
+      Alert.alert(`Código de error: ${error.code}`, error.message);
     } else {
       setSuccess(true);
     }
@@ -45,7 +45,7 @@ const Payment = ({
 
   const initializePaymentSheet = async () => {
     const { error } = await initPaymentSheet({
-      merchantDisplayName: "Example, Inc.",
+      merchantDisplayName: "Ejemplo, Inc.",
       intentConfiguration: {
         mode: {
           amount: parseInt(amount) * 100,
@@ -125,7 +125,7 @@ const Payment = ({
   return (
     <>
       <CustomButton
-        title="Confirm Ride"
+        title="Confirmar viaje"
         className="my-10"
         onPress={openPaymentSheet}
       />
@@ -138,16 +138,16 @@ const Payment = ({
           <Image source={images.check} className="w-28 h-28 mt-5" />
 
           <Text className="text-2xl text-center font-JakartaBold mt-5">
-            Booking placed successfully
+            Reserva realizada con éxito
           </Text>
 
           <Text className="text-md text-general-200 font-JakartaRegular text-center mt-3">
-            Thank you for your booking. Your reservation has been successfully
-            placed. Please proceed with your trip.
+            Gracias por tu reservación. Tu viaje ha sido confirmado. ¡Buen
+            viaje!
           </Text>
 
           <CustomButton
-            title="Back Home"
+            title="Volver al inicio"
             onPress={() => {
               setSuccess(false);
               router.push("/(root)/(tabs)/home");

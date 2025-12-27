@@ -52,14 +52,14 @@ export const googleOAuth = async (startOAuthFlow: any) => {
         return {
           success: true,
           code: "success",
-          message: "You have successfully signed in with Google",
+          message: "Has iniciado sesión con Google correctamente",
         };
       }
     }
 
     return {
       success: false,
-      message: "An error occurred while signing in with Google",
+      message: "Ocurrió un error al iniciar sesión con Google",
     };
   } catch (err: any) {
     console.error(err);

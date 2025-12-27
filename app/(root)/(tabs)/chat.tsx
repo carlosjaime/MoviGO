@@ -16,10 +16,10 @@ const Chat = () => {
             resizeMode="contain"
           />
           <Text className="text-3xl font-JakartaBold mt-3">
-            No Messages Yet
+            Aún no hay mensajes
           </Text>
           <Text className="text-base mt-2 text-center px-7">
-            Start a conversation with your friends and family
+            Inicia una conversación con tus amigos y familia
           </Text>
         </View>
       </ScrollView>

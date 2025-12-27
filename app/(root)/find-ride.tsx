@@ -16,9 +16,9 @@ const FindRide = () => {
   } = useLocationStore();
 
   return (
-    <RideLayout title="Ride">
+    <RideLayout title="Viaje">
       <View className="my-3">
-        <Text className="text-lg font-JakartaSemiBold mb-3">From</Text>
+        <Text className="text-lg font-JakartaSemiBold mb-3">Desde</Text>
 
         <GoogleTextInput
           icon={icons.target}
@@ -30,7 +30,7 @@ const FindRide = () => {
       </View>
 
       <View className="my-3">
-        <Text className="text-lg font-JakartaSemiBold mb-3">To</Text>
+        <Text className="text-lg font-JakartaSemiBold mb-3">Hasta</Text>
 
         <GoogleTextInput
           icon={icons.map}
@@ -42,7 +42,7 @@ const FindRide = () => {
       </View>
 
       <CustomButton
-        title="Find Now"
+        title="Buscar ahora"
         onPress={() => router.push(`/(root)/confirm-ride`)}
         className="mt-5"
       />

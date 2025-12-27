@@ -2,7 +2,7 @@ import { useUser } from "@clerk/clerk-expo";
 import { useAuth } from "@clerk/clerk-expo";
 import * as Location from "expo-location";
 import { router } from "expo-router";
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import {
   Text,
   View,
@@ -11,6 +11,7 @@ import {
   FlatList,
   ActivityIndicator,
 } from "react-native";
+import { Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import GoogleTextInput from "@/components/GoogleTextInput";
@@ -32,19 +33,14 @@ const Home = () => {
     router.replace("/(auth)/sign-in");
   };
 
-  const [hasPermission, setHasPermission] = useState<boolean>(false);
-
-  const {
-    data: recentRides,
-    loading,
-    error,
-  } = useFetch<Ride[]>(`/(api)/ride/${user?.id}`);
+  const { data: recentRides, loading } = useFetch<Ride[]>(
+    `/(api)/ride/${user?.id}`,
+  );
 
   useEffect(() => {
     (async () => {
       let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
-        setHasPermission(false);
         return;
       }
 
@@ -61,7 +57,7 @@ const Home = () => {
         address: `${address[0].name}, ${address[0].region}`,
       });
     })();
-  }, []);
+  }, [setUserLocation]);
 
   const handleDestinationPress = (location: {
     latitude: number;
@@ -78,9 +74,13 @@ const Home = () => {
       <FlatList
         data={recentRides?.slice(0, 5)}
         renderItem={({ item }) => <RideCard ride={item} />}
-        keyExtractor={(item, index) => index.toString()}
+        keyExtractor={(item: Ride, index) => String(item?.ride_id ?? index)}
         className="px-5"
         keyboardShouldPersistTaps="handled"
+        removeClippedSubviews
+        initialNumToRender={3}
+        maxToRenderPerBatch={5}
+        windowSize={5}
         contentContainerStyle={{
           paddingBottom: 100,
         }}
@@ -91,10 +91,12 @@ const Home = () => {
                 <Image
                   source={images.noResult}
                   className="w-40 h-40"
-                  alt="No recent rides found"
+                  alt="No se encontraron viajes recientes"
                   resizeMode="contain"
                 />
-                <Text className="text-sm">No recent rides found</Text>
+                <Text className="text-sm">
+                  No se encontraron viajes recientes
+                </Text>
               </>
             ) : (
               <ActivityIndicator size="small" color="#000" />
@@ -105,7 +107,7 @@ const Home = () => {
           <>
             <View className="flex flex-row items-center justify-between my-5">
               <Text className="text-2xl font-JakartaExtraBold">
-                Welcome {user?.firstName}👋
+                Bienvenido {user?.firstName}👋
               </Text>
               <TouchableOpacity
                 onPress={handleSignOut}
@@ -117,13 +119,13 @@ const Home = () => {
 
             <GoogleTextInput
               icon={icons.search}
-              containerStyle="bg-white shadow-md shadow-neutral-300"
+              containerStyle={`bg-white ${Platform.select({ web: "", default: "shadow-md shadow-neutral-300" })}`}
               handlePress={handleDestinationPress}
             />
 
             <>
               <Text className="text-xl font-JakartaBold mt-5 mb-3">
-                Your current location
+                Tu ubicación actual
               </Text>
               <View className="flex flex-row items-center bg-transparent h-[300px]">
                 <Map />
@@ -131,7 +133,7 @@ const Home = () => {
             </>
 
             <Text className="text-xl font-JakartaBold mt-5 mb-3">
-              Recent Rides
+              Viajes recientes
             </Text>
           </>
         }

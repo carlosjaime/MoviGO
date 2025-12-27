@@ -1,4 +1,4 @@
-import { View, Image } from "react-native";
+import { View, Image, Platform } from "react-native";
 import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
 
 import { icons } from "@/constants";
@@ -13,13 +13,26 @@ const GoogleTextInput = ({
   textInputBackgroundColor,
   handlePress,
 }: GoogleInputProps) => {
+  const shadow = Platform.select({
+    web: { boxShadow: "0px 2px 8px rgba(0,0,0,0.08)" },
+    ios: {
+      shadowColor: "#000",
+      shadowOpacity: 0.08,
+      shadowOffset: { width: 0, height: 2 },
+      shadowRadius: 8,
+    },
+    android: {
+      elevation: 2,
+    },
+    default: {},
+  });
   return (
     <View
       className={`flex flex-row items-center justify-center relative z-50 rounded-xl ${containerStyle}`}
     >
       <GooglePlacesAutocomplete
         fetchDetails={true}
-        placeholder="Search"
+        placeholder="Buscar"
         debounce={200}
         styles={{
           textInputContainer: {
@@ -28,7 +41,7 @@ const GoogleTextInput = ({
             borderRadius: 20,
             marginHorizontal: 20,
             position: "relative",
-            shadowColor: "#d4d4d4",
+            ...(shadow as object),
           },
           textInput: {
             backgroundColor: textInputBackgroundColor
@@ -48,7 +61,7 @@ const GoogleTextInput = ({
             top: 0,
             width: "100%",
             borderRadius: 10,
-            shadowColor: "#d4d4d4",
+            ...(shadow as object),
             zIndex: 99,
           },
         }}
@@ -61,7 +74,7 @@ const GoogleTextInput = ({
         }}
         query={{
           key: googlePlacesApiKey,
-          language: "en",
+          language: "es",
         }}
         renderLeftButton={() => (
           <View className="justify-center items-center w-6 h-6">
@@ -74,7 +87,7 @@ const GoogleTextInput = ({
         )}
         textInputProps={{
           placeholderTextColor: "gray",
-          placeholder: initialLocation ?? "Where do you want to go?",
+          placeholder: initialLocation ?? "¿A dónde quieres ir?",
         }}
       />
     </View>

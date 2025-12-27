@@ -1,12 +1,23 @@
-import { Image, Text, View } from "react-native";
+import { Image, Text, View, Platform } from "react-native";
 
 import { icons } from "@/constants";
 import { formatDate, formatTime } from "@/lib/utils";
 import { Ride } from "@/types/type";
 
 const RideCard = ({ ride }: { ride: Ride }) => {
+  const shadowCls = Platform.select({
+    web: "",
+    default: "shadow-sm shadow-neutral-300",
+  });
+  const shadowStyle = Platform.select({
+    web: { boxShadow: "0px 1px 6px rgba(0,0,0,0.08)" },
+    default: undefined,
+  });
   return (
-    <View className="flex flex-row items-center justify-center bg-white rounded-lg shadow-sm shadow-neutral-300 mb-3">
+    <View
+      className={`flex flex-row items-center justify-center bg-white rounded-lg ${shadowCls} mb-3`}
+      style={shadowStyle as any}
+    >
       <View className="flex flex-col items-start justify-center p-3">
         <View className="flex flex-row items-center justify-between">
           <Image
@@ -36,7 +47,7 @@ const RideCard = ({ ride }: { ride: Ride }) => {
         <View className="flex flex-col w-full mt-5 bg-general-500 rounded-lg p-3 items-start justify-center">
           <View className="flex flex-row items-center w-full justify-between mb-5">
             <Text className="text-md font-JakartaMedium text-gray-500">
-              Date & Time
+              Fecha y hora
             </Text>
             <Text className="text-md font-JakartaBold" numberOfLines={1}>
               {formatDate(ride.created_at)}, {formatTime(ride.ride_time)}
@@ -45,7 +56,7 @@ const RideCard = ({ ride }: { ride: Ride }) => {
 
           <View className="flex flex-row items-center w-full justify-between mb-5">
             <Text className="text-md font-JakartaMedium text-gray-500">
-              Driver
+              Conductor
             </Text>
             <Text className="text-md font-JakartaBold">
               {ride.driver.first_name} {ride.driver.last_name}
@@ -54,7 +65,7 @@ const RideCard = ({ ride }: { ride: Ride }) => {
 
           <View className="flex flex-row items-center w-full justify-between mb-5">
             <Text className="text-md font-JakartaMedium text-gray-500">
-              Car Seats
+              Asientos
             </Text>
             <Text className="text-md font-JakartaBold">
               {ride.driver.car_seats}
@@ -63,7 +74,7 @@ const RideCard = ({ ride }: { ride: Ride }) => {
 
           <View className="flex flex-row items-center w-full justify-between">
             <Text className="text-md font-JakartaMedium text-gray-500">
-              Payment Status
+              Estado del pago
             </Text>
             <Text
               className={`text-md capitalize font-JakartaBold ${ride.payment_status === "paid" ? "text-green-500" : "text-red-500"}`}

@@ -21,7 +21,7 @@ const Home = () => {
         }}
         className="w-full flex justify-end items-end p-5"
       >
-        <Text className="text-black text-md font-JakartaBold">Skip</Text>
+        <Text className="text-black text-md font-JakartaBold">Saltar</Text>
       </TouchableOpacity>
 
       <Swiper
@@ -55,7 +55,7 @@ const Home = () => {
       </Swiper>
 
       <CustomButton
-        title={isLastSlide ? "Get Started" : "Next"}
+        title={isLastSlide ? "Comenzar" : "Siguiente"}
         onPress={() =>
           isLastSlide
             ? router.replace("/(auth)/sign-up")

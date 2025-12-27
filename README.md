@@ -13,7 +13,7 @@
   </div>
 
 
-<h3 align="center">Full Stack Uber Clone</h3>
+<h3 align="center">Full Stack MoviGO</h3>
 
    <div align="center">
      Build this project step by step with our detailed tutorial on <a href="https://www.youtube.com/@javascriptmastery/videos" target="_blank"><b>JavaScript Mastery</b></a> YouTube. Join the JSM family!
@@ -44,7 +44,7 @@ like these step-by-step in a beginner-friendly manner!
 ## <a name="introduction">🤖 Introduction</a>
 
 Built with React Native for handling the user interface, Google Maps for rendering maps with directions, stripe for
-handling payments, serverless Postgres for managing databases, and styled with TailwindCSS, Uber Clone is a perfect
+Handling payments, serverless Postgres for managing databases, and styled with TailwindCSS, MoviGO is a perfect
 mobile app. The primary goal is to demonstrate how to develop full-stack mobile applications to showcase the developer's
 skills in a unique manner that creates a lasting impact.
 
@@ -137,7 +137,7 @@ EXPO_PUBLIC_DIRECTIONS_API_KEY=
 
 DATABASE_URL=
 
-EXPO_PUBLIC_SERVER_URL=https://uber.dev/
+EXPO_PUBLIC_SERVER_URL=https://movigo.dev/
 
 EXPO_PUBLIC_GEOAPIFY_API_KEY=
 
@@ -539,14 +539,14 @@ export const onboarding = [
         id: 1,
         title: "The perfect ride is just a tap away!",
         description:
-            "Your journey begins with Ryde. Find your ideal ride effortlessly.",
+            "Your journey begins with MoviGO. Find your ideal ride effortlessly.",
         image: images.onboarding1,
     },
     {
         id: 2,
-        title: "Best car in your hands with Ryde",
+        title: "Best car in your hands with MoviGO",
         description:
-            "Discover the convenience of finding your perfect ride with Ryde",
+            "Discover the convenience of finding your perfect ride with MoviGO",
         image: images.onboarding2,
     },
     {

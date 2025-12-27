@@ -87,28 +87,28 @@ const SignUp = () => {
         <View className="relative w-full h-[250px]">
           <Image source={images.signUpCar} className="z-0 w-full h-[250px]" />
           <Text className="text-2xl text-black font-JakartaSemiBold absolute bottom-5 left-5">
-            Create Your Account
+            Crea tu cuenta
           </Text>
         </View>
         <View className="p-5">
           <InputField
-            label="Name"
-            placeholder="Enter name"
+            label="Nombre"
+            placeholder="Ingresa tu nombre"
             icon={icons.person}
             value={form.name}
             onChangeText={(value) => setForm({ ...form, name: value })}
           />
           <InputField
-            label="Email"
-            placeholder="Enter email"
+            label="Correo electrónico"
+            placeholder="Ingresa tu correo"
             icon={icons.email}
             textContentType="emailAddress"
             value={form.email}
             onChangeText={(value) => setForm({ ...form, email: value })}
           />
           <InputField
-            label="Password"
-            placeholder="Enter password"
+            label="Contraseña"
+            placeholder="Ingresa tu contraseña"
             icon={icons.lock}
             secureTextEntry={true}
             textContentType="password"
@@ -116,7 +116,7 @@ const SignUp = () => {
             onChangeText={(value) => setForm({ ...form, password: value })}
           />
           <CustomButton
-            title="Sign Up"
+            title="Regístrate"
             onPress={onSignUpPress}
             className="mt-6"
           />
@@ -125,8 +125,8 @@ const SignUp = () => {
             href="/sign-in"
             className="text-lg text-center text-general-200 mt-10"
           >
-            Already have an account?{" "}
-            <Text className="text-primary-500">Log In</Text>
+            ¿Ya tienes una cuenta?{" "}
+            <Text className="text-primary-500">Inicia sesión</Text>
           </Link>
         </View>
         <ReactNativeModal
@@ -142,13 +142,13 @@ const SignUp = () => {
         >
           <View className="bg-white px-7 py-9 rounded-2xl min-h-[300px]">
             <Text className="font-JakartaExtraBold text-2xl mb-2">
-              Verification
+              Verificación
             </Text>
             <Text className="font-Jakarta mb-5">
-              We've sent a verification code to {form.email}.
+              Te hemos enviado un código de verificación a {form.email}.
             </Text>
             <InputField
-              label={"Code"}
+              label={"Código"}
               icon={icons.lock}
               placeholder={"12345"}
               value={verification.code}
@@ -163,7 +163,7 @@ const SignUp = () => {
               </Text>
             )}
             <CustomButton
-              title="Verify Email"
+              title="Verificar correo"
               onPress={onPressVerify}
               className="mt-5 bg-success-500"
             />
@@ -176,13 +176,13 @@ const SignUp = () => {
               className="w-[110px] h-[110px] mx-auto my-5"
             />
             <Text className="text-3xl font-JakartaBold text-center">
-              Verified
+              Verificado
             </Text>
             <Text className="text-base text-gray-400 font-Jakarta text-center mt-2">
-              You have successfully verified your account.
+              Has verificado tu cuenta correctamente.
             </Text>
             <CustomButton
-              title="Browse Home"
+              title="Ir al inicio"
               onPress={() => router.push(`/(root)/(tabs)/home`)}
               className="mt-5"
             />

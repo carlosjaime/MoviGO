@@ -10,11 +10,9 @@ import { Ride } from "@/types/type";
 const Rides = () => {
   const { user } = useUser();
 
-  const {
-    data: recentRides,
-    loading,
-    error,
-  } = useFetch<Ride[]>(`/(api)/ride/${user?.id}`);
+  const { data: recentRides, loading } = useFetch<Ride[]>(
+    `/(api)/ride/${user?.id}`,
+  );
 
   return (
     <SafeAreaView className="flex-1 bg-white">
@@ -34,10 +32,12 @@ const Rides = () => {
                 <Image
                   source={images.noResult}
                   className="w-40 h-40"
-                  alt="No recent rides found"
+                  alt="No se encontraron viajes recientes"
                   resizeMode="contain"
                 />
-                <Text className="text-sm">No recent rides found</Text>
+                <Text className="text-sm">
+                  No se encontraron viajes recientes
+                </Text>
               </>
             ) : (
               <ActivityIndicator size="small" color="#000" />
@@ -46,7 +46,9 @@ const Rides = () => {
         )}
         ListHeaderComponent={
           <>
-            <Text className="text-2xl font-JakartaBold my-5">All Rides</Text>
+            <Text className="text-2xl font-JakartaBold my-5">
+              Todos los viajes
+            </Text>
           </>
         }
       />

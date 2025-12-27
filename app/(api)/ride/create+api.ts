@@ -30,13 +30,31 @@ export async function POST(request: Request) {
       !driver_id ||
       !user_id
     ) {
-      return Response.json(
-        { error: "Missing required fields" },
-        { status: 400 },
+      return new Response(
+        JSON.stringify({ error: "Missing required fields" }),
+        {
+          status: 400,
+          headers: { "content-type": "application/json" },
+        },
       );
     }
 
-    const sql = neon(`${process.env.DATABASE_URL}`);
+    let url = process.env.DATABASE_URL || "";
+    if (!/^postgres(ql)?:\/\//.test(url)) {
+      return new Response(
+        JSON.stringify({ error: "DATABASE_URL inválida o no configurada" }),
+        {
+          status: 500,
+          headers: { "content-type": "application/json" },
+        },
+      );
+    }
+    if (!url.includes("sslmode=")) {
+      url = url.includes("?")
+        ? `${url}&sslmode=require`
+        : `${url}?sslmode=require`;
+    }
+    const sql = neon(url);
 
     const response = await sql`
       INSERT INTO rides ( 
@@ -67,9 +85,15 @@ export async function POST(request: Request) {
       RETURNING *;
     `;
 
-    return Response.json({ data: response[0] }, { status: 201 });
+    return new Response(JSON.stringify({ data: response[0] }), {
+      status: 201,
+      headers: { "content-type": "application/json" },
+    });
   } catch (error) {
     console.error("Error inserting data into recent_rides:", error);
-    return Response.json({ error: "Internal Server Error" }, { status: 500 });
+    return new Response(JSON.stringify({ error: "Internal Server Error" }), {
+      status: 500,
+      headers: { "content-type": "application/json" },
+    });
   }
 }
