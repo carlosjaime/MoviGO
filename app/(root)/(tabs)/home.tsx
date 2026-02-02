@@ -1,8 +1,9 @@
 import { useAuth, useUser } from "@clerk/clerk-expo";
 import * as Location from "expo-location";
 import { router } from "expo-router";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
+  Modal,
   Text,
   View,
   TouchableOpacity,
@@ -13,7 +14,6 @@ import {
 } from "react-native";
 import { Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import Swiper from "react-native-swiper";
 
 import GoogleTextInput from "@/components/GoogleTextInput";
 import InputField from "@/components/InputField";
@@ -21,9 +21,18 @@ import Map from "@/components/Map";
 import RideCard from "@/components/RideCard";
 import { icons, images } from "@/constants";
 import { fetchAPI, useFetch } from "@/lib/fetch";
-import { sendRideRequestNotification } from "@/lib/notifications";
+import {
+  registerForPushNotificationsAsync,
+  sendRideRequestNotification,
+} from "@/lib/notifications";
 import { getStoredRole, setStoredRole } from "@/lib/role";
-import { useLocationStore, useRideStore, useRoleStore } from "@/store";
+import { registerWebPushNotifications } from "@/lib/webPush";
+import {
+  useDriverStore,
+  useLocationStore,
+  useRideStore,
+  useRoleStore,
+} from "@/store";
 import { Ride } from "@/types/type";
 
 const statusLabels: Record<string, string> = {
@@ -35,15 +44,11 @@ const statusLabels: Record<string, string> = {
 
 const CustomerHome = () => {
   const { user } = useUser();
-  const { signOut } = useAuth();
 
   const { setUserLocation, setDestinationLocation } = useLocationStore();
+  const { drivers, selectedDriver, setSelectedDriver } = useDriverStore();
   const { activeRide } = useRideStore();
-
-  const handleSignOut = () => {
-    signOut();
-    router.replace("/(auth)/sign-in");
-  };
+  const [isTaxiModalOpen, setTaxiModalOpen] = useState(false);
 
   const { data: recentRides, loading } = useFetch<Ride[]>(
     `/(api)/ride/${user?.id}`,
@@ -111,8 +116,17 @@ const CustomerHome = () => {
     });
 
     await sendRideRequestNotification(address);
-    router.push("/(root)/find-ride");
+    setTaxiModalOpen(true);
   };
+
+  const sortedDrivers = useMemo(() => {
+    if (!drivers?.length) return [];
+    return [...drivers].sort((a, b) => {
+      const aTime = a.time ?? Number.POSITIVE_INFINITY;
+      const bTime = b.time ?? Number.POSITIVE_INFINITY;
+      return aTime - bTime;
+    });
+  }, [drivers]);
 
   const honorific =
     user?.firstName && /a$/i.test(user.firstName) ? "Bienvenida" : "Bienvenido";
@@ -157,12 +171,6 @@ const CustomerHome = () => {
               <Text className="text-2xl font-JakartaExtraBold flex-1 pr-3">
                 {honorific} {user?.firstName}👋
               </Text>
-              <TouchableOpacity
-                onPress={handleSignOut}
-                className="justify-center items-center w-10 h-10 rounded-full bg-white border border-neutral-200"
-              >
-                <Image source={icons.out} className="w-4 h-4" />
-              </TouchableOpacity>
             </View>
 
             <View className="mb-4">
@@ -221,16 +229,221 @@ const CustomerHome = () => {
           </>
         }
       />
+      <Modal
+        visible={isTaxiModalOpen}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setTaxiModalOpen(false)}
+      >
+        <TouchableOpacity
+          activeOpacity={1}
+          onPress={() => setTaxiModalOpen(false)}
+          className="flex-1 justify-end bg-black/40"
+        >
+          <TouchableOpacity
+            activeOpacity={1}
+            className="bg-white rounded-t-[32px] px-5 pt-4 pb-8 border border-neutral-200"
+          >
+          <View className="items-center mb-3">
+            <View className="w-10 h-1.5 rounded-full bg-neutral-200" />
+          </View>
+          <View className="flex-row items-center justify-between mb-4">
+            <Text className="text-xl font-JakartaExtraBold">
+              Taxis disponibles
+            </Text>
+            <View className="px-3 py-1 rounded-full bg-emerald-50">
+              <Text className="text-xs font-JakartaSemiBold text-emerald-700">
+                {sortedDrivers.length} disponibles
+              </Text>
+            </View>
+          </View>
+
+          {sortedDrivers.length === 0 ? (
+            <View className="bg-neutral-50 border border-neutral-200 rounded-2xl p-4">
+              <Text className="text-sm text-neutral-600">
+                No hay taxis cerca por ahora. Intenta en unos minutos.
+              </Text>
+            </View>
+          ) : (
+            <FlatList
+              data={sortedDrivers.slice(0, 6)}
+              keyExtractor={(item) => String(item.id)}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ paddingBottom: 8 }}
+              ItemSeparatorComponent={() => <View className="w-3" />}
+              renderItem={({ item }) => {
+                const isSelected = selectedDriver === item.id;
+                return (
+                  <TouchableOpacity
+                    onPress={() => setSelectedDriver(item.id)}
+                    className={`w-44 rounded-2xl border p-3 ${
+                      isSelected
+                        ? "bg-general-600 border-neutral-300"
+                        : "bg-white border-neutral-200"
+                    }`}
+                  >
+                    <View className="flex-row items-center justify-between">
+                      <Image
+                        source={{ uri: item.profile_image_url }}
+                        className="w-12 h-12 rounded-full"
+                      />
+                      <View className="items-center">
+                        <Image
+                          source={{ uri: item.car_image_url }}
+                          className="w-10 h-10"
+                          resizeMode="contain"
+                        />
+                        <Text className="text-[10px] text-neutral-500 mt-1">
+                          {item.car_seats} asientos
+                        </Text>
+                      </View>
+                    </View>
+                    <Text className="text-base font-JakartaSemiBold mt-3">
+                      {item.title}
+                    </Text>
+                    <View className="flex-row items-center mt-2">
+                      <Image source={icons.star} className="w-3 h-3 mr-1" />
+                      <Text className="text-xs text-neutral-600">
+                        {(Number(item.rating ?? 4.8)).toFixed(1)}
+                      </Text>
+                      <Text className="text-xs text-neutral-400 mx-2">•</Text>
+                      <Text className="text-xs text-neutral-600">
+                        {item.time ? `${item.time.toFixed(0)} min` : "Calculando"}
+                      </Text>
+                    </View>
+                    <View className="mt-2 px-2 py-1 rounded-full bg-black">
+                      <Text className="text-xs text-white text-center">
+                        ${item.price ?? "--"}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                );
+              }}
+            />
+          )}
+
+          <View className="flex-row items-center mt-6">
+            <TouchableOpacity
+              onPress={() => {
+                setTaxiModalOpen(false);
+                router.push("/(root)/confirm-ride");
+              }}
+              className="flex-1 bg-white border border-neutral-200 rounded-full py-3 mr-2"
+            >
+              <Text className="text-center text-sm font-JakartaSemiBold text-neutral-700">
+                Ver lista completa
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => {
+                if (!selectedDriver && sortedDrivers[0]) {
+                  setSelectedDriver(sortedDrivers[0].id);
+                }
+                setTaxiModalOpen(false);
+                router.push("/(root)/book-ride");
+              }}
+              className="flex-1 bg-black rounded-full py-3 ml-2"
+            >
+              <Text className="text-center text-sm font-JakartaSemiBold text-white">
+                Elegir este taxi
+              </Text>
+            </TouchableOpacity>
+          </View>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
     </SafeAreaView>
   );
 };
 
 const DriverHome = () => {
+  const { userId } = useAuth();
+  const { user } = useUser();
+  const { setUserLocation } = useLocationStore();
   const { activeRide, setRideStatus, clearActiveRide } = useRideStore();
   const [codeInput, setCodeInput] = useState("");
   const [codeError, setCodeError] = useState("");
 
   const canShowCodeInput = activeRide?.status === "arrived";
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const registerDriverToken = async () => {
+      if (!userId) return;
+      if (user?.fullName) {
+        const [firstName, ...lastNameParts] = user.fullName
+          .trim()
+          .split(" ");
+        try {
+          await fetchAPI("/(api)/driver", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              clerk_id: userId,
+              first_name: firstName || "Conductor",
+              last_name: lastNameParts.join(" ") || "MoviGO",
+              profile_image_url: user.imageUrl || null,
+            }),
+          });
+        } catch {
+          // driver creation should not block token registration
+        }
+      }
+
+      const provider = Platform.OS === "web" ? "fcm" : "expo";
+      const token =
+        Platform.OS === "web"
+          ? await registerWebPushNotifications()
+          : await registerForPushNotificationsAsync();
+
+      if (!isMounted) return;
+
+      try {
+        const payload: Record<string, unknown> = {
+          clerk_id: userId,
+          is_online: true,
+        };
+        if (token) {
+          payload.push_token = token;
+          payload.push_provider = provider;
+        }
+
+        await fetchAPI("/(api)/driver", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+      } catch {
+        // silent: token registration should not block UI
+      }
+    };
+
+    registerDriverToken();
+    return () => {
+      isMounted = false;
+    };
+  }, [user?.fullName, user?.imageUrl, userId]);
+
+  useEffect(() => {
+    (async () => {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") return;
+
+      const location = await Location.getCurrentPositionAsync({});
+      const address = await Location.reverseGeocodeAsync({
+        latitude: location.coords?.latitude!,
+        longitude: location.coords?.longitude!,
+      });
+
+      setUserLocation({
+        latitude: location.coords?.latitude,
+        longitude: location.coords?.longitude,
+        address: `${address[0].name}, ${address[0].region}`,
+      });
+    })();
+  }, [setUserLocation]);
 
   const handleArrived = async () => {
     if (!activeRide?.rideId) return;
@@ -311,7 +524,7 @@ const DriverHome = () => {
         </View>
 
         <View className="flex flex-row items-center bg-white h-[260px] rounded-2xl overflow-hidden border border-neutral-200">
-          <Map mode="driver" />
+          <Map mode="driver" driverClerkId={user?.id ?? null} />
         </View>
 
         {!activeRide && (
@@ -399,10 +612,7 @@ const normalizeRole = (value: unknown) =>
 
 const Home = () => {
   const { user } = useUser();
-  const swiperRef = useRef<Swiper>(null);
-  const [activeIndex, setActiveIndex] = useState(0);
   const { role, setRole } = useRoleStore();
-  const initialIndex = role === "driver" ? 1 : 0;
   const [isRoleReady, setIsRoleReady] = useState(false);
 
   useEffect(() => {
@@ -410,24 +620,14 @@ const Home = () => {
     const loadRole = async () => {
       const storedRole = await getStoredRole();
       if (!isMounted) return;
-      const targetIndex = storedRole === "driver" ? 1 : 0;
       setRole(storedRole);
-      setActiveIndex(targetIndex);
       setIsRoleReady(true);
-      if (targetIndex) {
-        swiperRef.current?.scrollBy(targetIndex, false);
-      }
 
       if (!user?.id) return;
       const clerkRole = normalizeRole(user?.publicMetadata?.role);
       if (clerkRole && clerkRole !== storedRole) {
-        const clerkIndex = clerkRole === "driver" ? 1 : 0;
         setRole(clerkRole);
-        setActiveIndex(clerkIndex);
         setStoredRole(clerkRole);
-        if (clerkIndex) {
-          swiperRef.current?.scrollBy(clerkIndex, false);
-        }
       }
 
       const response = await fetchAPI(
@@ -437,13 +637,8 @@ const Home = () => {
       if (response?.data?.role) {
         const dbRole = normalizeRole(response.data.role);
         if (dbRole && dbRole !== storedRole && dbRole !== clerkRole) {
-          const dbIndex = dbRole === "driver" ? 1 : 0;
           setRole(dbRole);
-          setActiveIndex(dbIndex);
           setStoredRole(dbRole);
-          if (dbIndex) {
-            swiperRef.current?.scrollBy(dbIndex, false);
-          }
         }
       } else {
         await fetchAPI("/(api)/user/role", {
@@ -468,47 +663,13 @@ const Home = () => {
     };
   }, [setRole, user?.id]);
   const roleLabel = useMemo(
-    () => (activeIndex === 0 ? "Cliente" : "Conductor"),
-    [activeIndex],
+    () => (role === "driver" ? "Conductor" : "Cliente"),
+    [role],
   );
 
   return (
     <View className="flex-1 bg-general-500">
-      <Swiper
-        ref={swiperRef}
-        loop={false}
-        index={isRoleReady ? initialIndex : 0}
-        onIndexChanged={(index) => {
-          setActiveIndex(index);
-          const nextRole = index === 0 ? "client" : "driver";
-          setRole(nextRole);
-          setStoredRole(nextRole);
-          if (user?.id) {
-            fetchAPI("/(api)/user/role", {
-              method: "PATCH",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                clerk_id: user.id,
-                role: nextRole,
-              }),
-            });
-            if (user?.update) {
-              user.update({
-                publicMetadata: { role: nextRole },
-              });
-            }
-          }
-        }}
-        dot={
-          <View className="w-[32px] h-[4px] mx-1 bg-[#E2E8F0] rounded-full" />
-        }
-        activeDot={
-          <View className="w-[32px] h-[4px] mx-1 bg-[#0286FF] rounded-full" />
-        }
-      >
-        <CustomerHome />
-        <DriverHome />
-      </Swiper>
+      {isRoleReady && role === "driver" ? <DriverHome /> : <CustomerHome />}
       <View className="absolute top-3 right-5 bg-white border border-neutral-200 rounded-full px-3 py-1">
         <Text className="text-xs font-JakartaSemiBold text-neutral-600">
           {roleLabel}

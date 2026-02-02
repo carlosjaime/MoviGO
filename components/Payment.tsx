@@ -15,7 +15,7 @@ import {
 import CustomButton from "@/components/CustomButton";
 import { images } from "@/constants";
 import { fetchAPI } from "@/lib/fetch";
-import { useLocationStore, useRideStore } from "@/store";
+import { useDriverStore, useLocationStore, useRideStore } from "@/store";
 import { PaymentProps } from "@/types/type";
 
 const Payment = ({
@@ -35,19 +35,89 @@ const Payment = ({
     destinationLongitude,
   } = useLocationStore();
   const { setActiveRide } = useRideStore();
+  const { drivers, selectedDriver } = useDriverStore();
 
   const { userId } = useAuth();
   const [success, setSuccess] = useState<boolean>(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [paymentMethod] = useState<"cash" | "card">("cash");
+  const driverDetails = drivers?.filter(
+    (driver) => +driver.id === selectedDriver,
+  )[0];
+  const driverPushToken = driverDetails?.push_token;
+  const driverPushProvider = driverDetails?.push_provider ?? "expo";
+
+  const createRideAndNotify = async (paymentStatus: "paid" | "cash") => {
+    const rideResponse = await fetchAPI("/(api)/ride/create", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        origin_address: userAddress,
+        destination_address: destinationAddress,
+        origin_latitude: userLatitude,
+        origin_longitude: userLongitude,
+        destination_latitude: destinationLatitude,
+        destination_longitude: destinationLongitude,
+        ride_time: rideTime.toFixed(0),
+        fare_price: parseInt(amount) * 100,
+        payment_status: paymentStatus,
+        driver_id: driverId,
+        user_id: userId,
+      }),
+    });
+
+    if (rideResponse?.data?.ride_id) {
+      setActiveRide({
+        rideId: rideResponse.data.ride_id,
+        verificationCode: rideResponse.data.verification_code,
+        status: rideResponse.data.status || "driver_en_route",
+        driverId,
+        originAddress: userAddress,
+        destinationAddress,
+      });
+
+      if (driverPushToken) {
+        await fetchAPI("/(api)/notifications/ride-request", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            push_token: driverPushToken,
+            push_provider: driverPushProvider,
+            title: "Nuevo viaje solicitado",
+            message: destinationAddress
+              ? `Destino: ${destinationAddress}`
+              : "Revisa tu app para aceptar el viaje.",
+            data: {
+              ride_id: rideResponse.data.ride_id,
+            },
+          }),
+        });
+      }
+    }
+  };
 
   const openPaymentSheet = async () => {
-    await initializePaymentSheet();
+    if (isSubmitting) return;
+    try {
+      setIsSubmitting(true);
+      if (paymentMethod === "cash") {
+        await createRideAndNotify("cash");
+        setSuccess(true);
+        return;
+      }
 
-    const { error } = await presentPaymentSheet();
+      await initializePaymentSheet();
+      const { error } = await presentPaymentSheet();
 
-    if (error) {
-      Alert.alert(`Código de error: ${error.code}`, error.message);
-    } else {
-      setSuccess(true);
+      if (error) {
+        Alert.alert(`Código de error: ${error.code}`, error.message);
+      } else {
+        setSuccess(true);
+      }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -124,6 +194,24 @@ const Payment = ({
                   originAddress: userAddress,
                   destinationAddress,
                 });
+
+                if (driverPushToken) {
+                  await fetchAPI("/(api)/notifications/ride-request", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      push_token: driverPushToken,
+                      push_provider: driverPushProvider,
+                      title: "Nuevo viaje solicitado",
+                      message: destinationAddress
+                        ? `Destino: ${destinationAddress}`
+                        : "Revisa tu app para aceptar el viaje.",
+                      data: {
+                        ride_id: rideResponse.data.ride_id,
+                      },
+                    }),
+                  });
+                }
               }
 
               intentCreationCallback({
@@ -143,10 +231,51 @@ const Payment = ({
 
   return (
     <>
+      <View className="mt-6">
+        <Text className="text-base font-JakartaSemiBold mb-3">
+          Método de pago
+        </Text>
+        <View className="flex-row items-center">
+          <View className="flex-1 mr-2">
+            <View className="rounded-2xl border border-neutral-900 bg-neutral-900 px-4 py-4">
+              <View className="flex-row items-center justify-between">
+                <Text className="text-sm font-JakartaSemiBold text-white">
+                  Efectivo
+                </Text>
+                <View className="px-2 py-0.5 rounded-full bg-white/15">
+                  <Text className="text-[10px] text-white">Activo</Text>
+                </View>
+              </View>
+              <Text className="text-xs text-white/80 mt-2">
+                Paga al llegar al destino
+              </Text>
+            </View>
+          </View>
+          <View className="flex-1 ml-2 opacity-50">
+            <View className="rounded-2xl border border-neutral-200 bg-neutral-100 px-4 py-4">
+              <View className="flex-row items-center justify-between">
+                <Text className="text-sm font-JakartaSemiBold text-neutral-500">
+                  Tarjeta
+                </Text>
+                <View className="px-2 py-0.5 rounded-full bg-neutral-200">
+                  <Text className="text-[10px] text-neutral-600">
+                    Próximamente
+                  </Text>
+                </View>
+              </View>
+              <Text className="text-xs text-neutral-400 mt-2">
+                Disponible pronto
+              </Text>
+            </View>
+          </View>
+        </View>
+      </View>
+
       <CustomButton
-        title="Confirmar viaje"
-        className="my-10"
+        title="Confirmar viaje en efectivo"
+        className={`my-10 ${isSubmitting ? "opacity-60" : ""}`}
         onPress={openPaymentSheet}
+        disabled={isSubmitting}
       />
 
       <Modal

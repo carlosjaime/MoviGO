@@ -13,6 +13,7 @@ import {
   configureNotifications,
   registerForPushNotificationsAsync,
 } from "@/lib/notifications";
+import { registerWebPushNotifications } from "@/lib/webPush";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -52,6 +53,7 @@ const RootLayout = memo(function RootLayout() {
   useEffect(() => {
     configureNotifications();
     registerForPushNotificationsAsync();
+    registerWebPushNotifications();
   }, []);
 
   if (!loaded) {

@@ -9,10 +9,12 @@ const RideLayout = ({
   title,
   snapPoints,
   children,
+  useScrollView = true,
 }: {
   title: string;
   snapPoints?: string[];
   children: React.ReactNode;
+  useScrollView?: boolean;
 }) => {
   return (
     <View className="flex-1 bg-white">

@@ -66,7 +66,7 @@ const uberMapStyle = [
   },
 ];
 
-const Map = ({ mode = "client", onMapPress }: MapProps) => {
+const Map = ({ mode = "client", onMapPress, driverClerkId }: MapProps) => {
   const {
     userLongitude,
     userLatitude,
@@ -76,15 +76,23 @@ const Map = ({ mode = "client", onMapPress }: MapProps) => {
   const { selectedDriver, setDrivers } = useDriverStore();
   const mapRef = useRef<MapView>(null);
 
-  const { data: drivers, loading, error } = useFetch<Driver[]>("/(api)/driver");
+  const { data: drivers, loading, error } = useFetch<Driver[]>(
+    "/(api)/driver?online=1",
+  );
   const [markers, setMarkers] = useState<MarkerData[]>([]);
   const driverMarker = useMemo(() => {
     if (mode !== "driver") return null;
     if (!markers.length) return null;
+    if (driverClerkId) {
+      const byClerk = markers.find(
+        (marker) => marker.clerk_id === driverClerkId,
+      );
+      if (byClerk) return byClerk;
+    }
     return (
       markers.find((marker) => marker.id === selectedDriver) ?? markers[0]
     );
-  }, [markers, mode, selectedDriver]);
+  }, [driverClerkId, markers, mode, selectedDriver]);
 
   useEffect(() => {
     if (Array.isArray(drivers)) {

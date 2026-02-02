@@ -3,14 +3,21 @@ import { FlatList, View } from "react-native";
 
 import CustomButton from "@/components/CustomButton";
 import DriverCard from "@/components/DriverCard";
+import LoadingOverlay from "@/components/LoadingOverlay";
 import RideLayout from "@/components/RideLayout";
-import { useDriverStore } from "@/store";
+import { useDriverStore, useLocationStore } from "@/store";
 
 const ConfirmRide = () => {
   const { drivers, selectedDriver, setSelectedDriver } = useDriverStore();
+  const { destinationAddress } = useLocationStore();
+  const isLoadingRoutes = !!destinationAddress && drivers.length === 0;
 
   return (
-    <RideLayout title={"Elige un conductor"} snapPoints={["65%", "85%"]}>
+    <RideLayout
+      title={"Elige un conductor"}
+      snapPoints={["65%", "85%"]}
+      useScrollView={false}
+    >
       <FlatList
         data={drivers}
         keyExtractor={(item, index) => index.toString()}
@@ -29,6 +36,10 @@ const ConfirmRide = () => {
             />
           </View>
         )}
+      />
+      <LoadingOverlay
+        visible={isLoadingRoutes}
+        message="Cargando rutas..."
       />
     </RideLayout>
   );

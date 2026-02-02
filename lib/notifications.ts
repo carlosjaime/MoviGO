@@ -1,7 +1,20 @@
-import * as Notifications from "expo-notifications";
+import Constants from "expo-constants";
 import { Platform } from "react-native";
 
+const getNotificationsModule = () => {
+  if (Platform.OS === "web") return null;
+  if (Constants.executionEnvironment === "storeClient") return null;
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    return require("expo-notifications") as typeof import("expo-notifications");
+  } catch {
+    return null;
+  }
+};
+
 export const configureNotifications = () => {
+  const Notifications = getNotificationsModule();
+  if (!Notifications) return;
   Notifications.setNotificationHandler({
     handleNotification: async () => ({
       shouldShowAlert: true,
@@ -12,7 +25,8 @@ export const configureNotifications = () => {
 };
 
 export const registerForPushNotificationsAsync = async () => {
-  if (Platform.OS === "web") return null;
+  const Notifications = getNotificationsModule();
+  if (!Notifications) return null;
 
   const settings = await Notifications.getPermissionsAsync();
   let status = settings.status;
@@ -46,6 +60,8 @@ export const registerForPushNotificationsAsync = async () => {
 export const sendRideRequestNotification = async (
   destination?: string | null,
 ) => {
+  const Notifications = getNotificationsModule();
+  if (!Notifications) return;
   await Notifications.presentNotificationAsync({
     title: "Taxi solicitado",
     body: destination

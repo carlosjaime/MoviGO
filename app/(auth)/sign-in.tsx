@@ -6,6 +6,7 @@ import Swiper from "react-native-swiper";
 
 import CustomButton from "@/components/CustomButton";
 import InputField from "@/components/InputField";
+import LoadingOverlay from "@/components/LoadingOverlay";
 import OAuth from "@/components/OAuth";
 import { icons, images } from "@/constants";
 import { getClerkErrorMessage } from "@/lib/auth";
@@ -16,6 +17,7 @@ const SignIn = () => {
   const { signIn, setActive, isLoaded } = useSignIn();
   const { role, setRole } = useRoleStore();
   const [roleIndex, setRoleIndex] = useState(role === "driver" ? 1 : 0);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const roleSlides = useMemo(
     () => [
@@ -47,8 +49,10 @@ const SignIn = () => {
 
   const onSignInPress = useCallback(async () => {
     if (!isLoaded) return;
+    if (isSubmitting) return;
 
     try {
+      setIsSubmitting(true);
       const signInAttempt = await signIn.create({
         identifier: form.email,
         password: form.password,
@@ -65,8 +69,10 @@ const SignIn = () => {
     } catch (err: any) {
       console.log(JSON.stringify(err, null, 2));
       Alert.alert("Error", getClerkErrorMessage(err));
+    } finally {
+      setIsSubmitting(false);
     }
-  }, [isLoaded, form, setActive, signIn]);
+  }, [isLoaded, form, isSubmitting, setActive, signIn]);
 
   return (
     <ScrollView className="flex-1 bg-white">
@@ -164,7 +170,8 @@ const SignIn = () => {
                     <CustomButton
                       title="Iniciar sesión"
                       onPress={onSignInPress}
-                      className="mt-3"
+                      className={`mt-3 ${isSubmitting ? "opacity-60" : ""}`}
+                      disabled={isSubmitting}
                     />
 
                     <OAuth />
@@ -182,6 +189,10 @@ const SignIn = () => {
           </Link>
         </View>
       </View>
+      <LoadingOverlay
+        visible={isSubmitting}
+        message="Iniciando sesion..."
+      />
     </ScrollView>
   );
 };

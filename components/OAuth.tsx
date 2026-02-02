@@ -1,16 +1,24 @@
 import { useOAuth } from "@clerk/clerk-expo";
 import { router } from "expo-router";
+import { useState } from "react";
 import { Alert, Image, Text, View } from "react-native";
 
 import CustomButton from "@/components/CustomButton";
+import LoadingOverlay from "@/components/LoadingOverlay";
 import { icons } from "@/constants";
 import { googleOAuth } from "@/lib/auth";
+import { useRoleStore } from "@/store";
 
-const OAuth = () => {
+const OAuth = ({ role }: { role?: "client" | "driver" }) => {
+  const { role: storedRole } = useRoleStore();
   const { startOAuthFlow } = useOAuth({ strategy: "oauth_google" });
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleGoogleSignIn = async () => {
-    const result = await googleOAuth(startOAuthFlow);
+    if (isLoading) return;
+    setIsLoading(true);
+    const result = await googleOAuth(startOAuthFlow, role ?? storedRole);
+    setIsLoading(false);
 
     if (result.code === "session_exists") {
       Alert.alert("Éxito", "La sesión existe. Redirigiendo al inicio.");
@@ -48,6 +56,7 @@ const OAuth = () => {
         textVariant="primary"
         onPress={handleGoogleSignIn}
       />
+      <LoadingOverlay visible={isLoading} message="Conectando..." />
     </View>
   );
 };

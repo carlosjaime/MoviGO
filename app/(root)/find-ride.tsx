@@ -1,11 +1,11 @@
 import { router } from "expo-router";
-import { Text, View } from "react-native";
+import { Alert, Text, View } from "react-native";
 
 import CustomButton from "@/components/CustomButton";
 import GoogleTextInput from "@/components/GoogleTextInput";
 import RideLayout from "@/components/RideLayout";
 import { icons } from "@/constants";
-import { useLocationStore } from "@/store";
+import { useDriverStore, useLocationStore } from "@/store";
 
 const FindRide = () => {
   const {
@@ -14,6 +14,33 @@ const FindRide = () => {
     setDestinationLocation,
     setUserLocation,
   } = useLocationStore();
+  const { drivers, setSelectedDriver } = useDriverStore();
+
+  const handleNearestDriver = () => {
+    if (!destinationAddress) {
+      Alert.alert("Selecciona tu destino primero.");
+      return;
+    }
+
+    if (!drivers.length) {
+      Alert.alert("No hay conductores disponibles.");
+      return;
+    }
+
+    const sortedDrivers = [...drivers].sort((a, b) => {
+      const aTime = a.time ?? Number.POSITIVE_INFINITY;
+      const bTime = b.time ?? Number.POSITIVE_INFINITY;
+      return aTime - bTime;
+    });
+    const nearestDriver = sortedDrivers[0];
+    if (!nearestDriver) {
+      Alert.alert("No hay conductores disponibles.");
+      return;
+    }
+
+    setSelectedDriver(nearestDriver.id);
+    router.push("/(root)/book-ride");
+  };
 
   return (
     <RideLayout title="Viaje">
@@ -42,8 +69,14 @@ const FindRide = () => {
       </View>
 
       <CustomButton
-        title="Buscar ahora"
-        onPress={() => router.push(`/(root)/confirm-ride`)}
+        title="Buscar conductor cercano"
+        onPress={handleNearestDriver}
+        className="mt-4"
+      />
+
+      <CustomButton
+        title="Elegir de la lista"
+        onPress={() => router.push("/(root)/confirm-ride")}
         className="mt-5"
       />
     </RideLayout>

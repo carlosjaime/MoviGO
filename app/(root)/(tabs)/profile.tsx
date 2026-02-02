@@ -4,10 +4,12 @@ import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { icons } from "@/constants";
+import { useRoleStore } from "@/store";
 
 const Profile = () => {
   const { user } = useUser();
   const { signOut } = useAuth();
+  const { role } = useRoleStore();
   const fullName =
     [user?.firstName, user?.lastName].filter(Boolean).join(" ") ||
     "Invitado";
@@ -29,17 +31,10 @@ const Profile = () => {
         className="px-5"
         contentContainerStyle={{ paddingBottom: 120 }}
       >
-        <View className="flex flex-row items-center justify-between mt-2">
-          <TouchableOpacity
-            onPress={() => router.back()}
-            className="w-10 h-10 items-center justify-center rounded-full bg-white border border-neutral-200"
-          >
-            <Image source={icons.close} className="w-4 h-4" />
-          </TouchableOpacity>
-          <Text className="text-base font-JakartaMedium text-neutral-700">
+        <View className="flex flex-row items-center justify-center mt-2">
+          <Text className="text-lg font-JakartaSemiBold text-neutral-700">
             Perfil
           </Text>
-          <View className="w-10 h-10" />
         </View>
 
         <View className="items-center mt-6">
@@ -58,7 +53,7 @@ const Profile = () => {
           <View className="flex-row items-center mt-3 px-3 py-1 rounded-full bg-white border border-neutral-200">
             <Image source={icons.star} className="w-3 h-3 mr-2" />
             <Text className="text-xs font-JakartaMedium text-neutral-700">
-              Platinum
+              {role === "driver" ? "Conductor" : "Cliente"}
             </Text>
           </View>
           <Text className="text-2xl font-JakartaExtraBold mt-3">

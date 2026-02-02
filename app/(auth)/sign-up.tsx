@@ -6,6 +6,7 @@ import Swiper from "react-native-swiper";
 
 import CustomButton from "@/components/CustomButton";
 import InputField from "@/components/InputField";
+import LoadingOverlay from "@/components/LoadingOverlay";
 import OAuth from "@/components/OAuth";
 import { icons, images } from "@/constants";
 import { getClerkErrorMessage } from "@/lib/auth";
@@ -18,6 +19,8 @@ const SignUp = () => {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const { role, setRole } = useRoleStore();
   const [roleIndex, setRoleIndex] = useState(role === "driver" ? 1 : 0);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loadingMessage, setLoadingMessage] = useState("Creando cuenta...");
 
   const [form, setForm] = useState({
     name: "",
@@ -61,7 +64,10 @@ const SignUp = () => {
 
   const onSignUpPress = async () => {
     if (!isLoaded) return;
+    if (isSubmitting) return;
     try {
+      setLoadingMessage("Creando cuenta...");
+      setIsSubmitting(true);
       await signUp.create({
         emailAddress: form.email,
         password: form.password,
@@ -76,11 +82,16 @@ const SignUp = () => {
       // for more info on error handling
       console.log(JSON.stringify(err, null, 2));
       Alert.alert("Error", getClerkErrorMessage(err));
+    } finally {
+      setIsSubmitting(false);
     }
   };
   const onPressVerify = async () => {
     if (!isLoaded) return;
+    if (isSubmitting) return;
     try {
+      setLoadingMessage("Verificando cuenta...");
+      setIsSubmitting(true);
       const completeSignUp = await signUp.attemptEmailAddressVerification({
         code: verification.code,
       });
@@ -95,6 +106,18 @@ const SignUp = () => {
             role: nextRole,
           }),
         });
+        if (nextRole === "driver") {
+          const [firstName, ...lastNameParts] = form.name.trim().split(" ");
+          await fetchAPI("/(api)/driver", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              clerk_id: completeSignUp.createdUserId,
+              first_name: firstName || "Conductor",
+              last_name: lastNameParts.join(" ") || "MoviGO",
+            }),
+          });
+        }
         setRole(nextRole);
         setStoredRole(nextRole);
         await setActive({ session: completeSignUp.createdSessionId });
@@ -117,6 +140,8 @@ const SignUp = () => {
         error: getClerkErrorMessage(err),
         state: "failed",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
   return (
@@ -222,9 +247,10 @@ const SignUp = () => {
                     <CustomButton
                       title="Regístrate"
                       onPress={onSignUpPress}
-                      className="mt-3"
+                      className={`mt-3 ${isSubmitting ? "opacity-60" : ""}`}
+                      disabled={isSubmitting}
                     />
-                    <OAuth />
+                    <OAuth role={roleIndex === 0 ? "client" : "driver"} />
                   </View>
                 </ScrollView>
               ))}
@@ -321,6 +347,7 @@ const SignUp = () => {
           </View>
         </Modal>
       </View>
+      <LoadingOverlay visible={isSubmitting} message={loadingMessage} />
     </ScrollView>
   );
 };

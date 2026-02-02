@@ -1,3 +1,4 @@
+import Constants from "expo-constants";
 import { router } from "expo-router";
 import React from "react";
 import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
@@ -9,23 +10,27 @@ const RideLayout = ({
   title,
   snapPoints,
   children,
+  useScrollView = true,
 }: {
   title: string;
   snapPoints?: string[];
   children: React.ReactNode;
+  useScrollView?: boolean;
 }) => {
   let BottomSheet: any = null;
   let BottomSheetView: any = null;
   let BottomSheetScrollView: any = null;
 
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const bs = require("@gorhom/bottom-sheet");
-    BottomSheet = bs.default;
-    BottomSheetView = bs.BottomSheetView;
-    BottomSheetScrollView = bs.BottomSheetScrollView;
-  } catch {
-    BottomSheet = null;
+  if (Constants.executionEnvironment !== "storeClient") {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const bs = require("@gorhom/bottom-sheet");
+      BottomSheet = bs.default;
+      BottomSheetView = bs.BottomSheetView;
+      BottomSheetScrollView = bs.BottomSheetScrollView;
+    } catch {
+      BottomSheet = null;
+    }
   }
 
   return (
@@ -69,13 +74,15 @@ const RideLayout = ({
             </BottomSheetScrollView>
           )}
         </BottomSheet>
-      ) : (
+      ) : useScrollView ? (
         <ScrollView
           style={{ flex: 1, padding: 20 }}
           contentContainerStyle={{ paddingBottom: 40 }}
         >
           {children}
         </ScrollView>
+      ) : (
+        <View style={{ flex: 1, padding: 20 }}>{children}</View>
       )}
     </View>
   );

@@ -28,7 +28,10 @@ export const tokenCache = {
   },
 };
 
-export const googleOAuth = async (startOAuthFlow: any) => {
+export const googleOAuth = async (
+  startOAuthFlow: any,
+  role: "client" | "driver" = "client",
+) => {
   try {
     const { createdSessionId, setActive, signUp } = await startOAuthFlow({
       redirectUrl: Linking.createURL("/(auth)/sign-in"),
@@ -41,12 +44,32 @@ export const googleOAuth = async (startOAuthFlow: any) => {
         if (signUp.createdUserId) {
           await fetchAPI("/(api)/user", {
             method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
             body: JSON.stringify({
               name: `${signUp.firstName} ${signUp.lastName}`,
               email: signUp.emailAddress,
               clerkId: signUp.createdUserId,
+              role,
             }),
           });
+
+          if (role === "driver") {
+            await fetchAPI("/(api)/driver", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                clerk_id: signUp.createdUserId,
+                first_name: signUp.firstName || "Conductor",
+                last_name: signUp.lastName || "MoviGO",
+                profile_image_url:
+                  signUp.imageUrl || signUp.profileImageUrl || null,
+              }),
+            });
+          }
         }
 
         return {

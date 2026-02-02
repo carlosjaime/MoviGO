@@ -8,6 +8,9 @@ declare interface Driver {
   car_image_url: string;
   car_seats: number;
   rating: number;
+  clerk_id?: string;
+  push_token?: string | null;
+  push_provider?: "expo" | "fcm";
 }
 
 declare interface MarkerData {
@@ -23,6 +26,9 @@ declare interface MarkerData {
   last_name: string;
   time?: number;
   price?: string;
+  clerk_id?: string;
+  push_token?: string | null;
+  push_provider?: "expo" | "fcm";
 }
 
 declare interface MapProps {
@@ -33,6 +39,7 @@ declare interface MapProps {
   onMapReady?: () => void;
   mode?: "client" | "driver";
   onMapPress?: (location: { latitude: number; longitude: number }) => void;
+  driverClerkId?: string | null;
 }
 
 declare interface Ride {
